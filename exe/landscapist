@@ -1,3 +1,33 @@
 #!/usr/bin/env ruby
 
-require "landscapist"
+require 'landscapist'
+require 'thor'
+
+
+class LandscapistCLI < Thor
+  
+  desc 'print FILE', "Print the API tree"
+  def print(file)
+    load(file)
+    puts Landscapist.yard.tree
+  end
+  
+  desc 'swagger FILE', "Print the API swagger definition"
+  def swagger(file)
+    load(file)
+    puts Landscapist.yard.swagger
+  end
+  
+  desc 'server FILE', "Start web server"
+  method_option :port, type: :numeric, default: 9292, aliases: '-p', desc: 'http listen port'
+  def server(file)
+    require 'landscapist/viewer/swagger'
+    system(%Q[(sleep 1 ; open http://localhost:#{options[:port]}/) &]) if RUBY_PLATFORM =~ /darwin/i
+    Rack::Server.start( app: Rack::ShowExceptions.new(Landscapist::Viewer::Swagger.new(file)), Port: options[:port] )
+  end
+  
+end
+
+LandscapistCLI.start
+
+

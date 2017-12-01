@@ -61,7 +61,7 @@ module Landscapist
     private
     
     def _resolve_spec(spec)
-      return spec unless spec.is_a?(Symbol)
+      return spec unless spec.is_a?(Symbol) || spec.is_a?(Array)
       # return spec if spec.is_a?(Definition)
       return spec.map(&method(:_resolve_spec)) if spec.is_a?(Array)
       parent.find_payload(spec) || Type.find_core_type(spec) || parent.get_type(spec)

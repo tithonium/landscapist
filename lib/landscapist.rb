@@ -1,9 +1,10 @@
 require 'delegate'
+require 'rack'
 
 require "landscapist/version"
 require "landscapist/exceptions"
 
-require "active_support/inflector"
+# require "active_support/inflector"
 
 require "landscapist/definition"
 require "landscapist/yard"
@@ -14,12 +15,18 @@ require "landscapist/basic_types"
 require "landscapist/renderer"
 
 module Landscapist
-  def self.landscape(&block)
-    Landscapist::Yard::DSL.new(yard).instance_eval(&block)
-  end
+  class << self
+    def clear
+      @yard = nil
+    end
   
-  def self.yard
-    @yard ||= Landscapist::Yard.new(nil).tap{|y| y.set_path('/') }
+    def landscape(&block)
+      Landscapist::Yard::DSL.new(yard).instance_eval(&block)
+    end
+  
+    def yard
+      @yard ||= Landscapist::Yard.new(nil).tap{|y| y.set_path('/') }
+    end
   end
 end
 

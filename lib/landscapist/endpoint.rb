@@ -1,5 +1,3 @@
-require 'rack'
-
 module Landscapist
   class Endpoint < Definition
     
@@ -32,6 +30,10 @@ module Landscapist
     end
 
     def add_expect(spec, options = {})
+      
+      Landscapist::Endpoint::Expectation.new(spec, options[:optional])
+      
+      
       value = update_structures(@expects, spec, options)
       @expects = value
       @expect_type = value.is_a?(Hash) ? :hash : (value.is_a?(Array) && value.length == 1 ? :array : :payload)
@@ -43,7 +45,15 @@ module Landscapist
       raise MixedReturnType, "Endpoint #{name} is already returning a single type on #{status}" if returns_single_type?(status)
       value = update_structures(@returns[status], spec, options)
       @returns[status] = value
-      @return_type[status] = value.is_a?(Hash) ? :hash : (value.is_a?(Array) && value.length == 1 ? :array : :payload)
+      @return_type[status] = if value.is_a?(Hash)
+        :hash
+      elsif value.is_a?(Array) && value.length == 1
+        :array
+      elsif value.is_a?(Type::CoreType)
+        :scalar
+      else
+        :payload
+      end
       warn "Warning: Swagger does not permit defining mulitple return types for the same http response. It will require a union type for the #{status} return of #{full_name}" if value.is_a?(Array) && value.length > 1
     end
 
@@ -114,3 +124,5 @@ module Landscapist
     
   end
 end
+
+require "landscapist/endpoint/expectation"

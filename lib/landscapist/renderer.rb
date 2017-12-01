@@ -4,8 +4,9 @@ require "landscapist/renderer/swagger"
 module Landscapist
   class Renderer
     
-    attr_reader :target
-    def initialize(target)
+    attr_reader :root, :target
+    def initialize(root, target)
+      @root = root
       @target = target
     end
     

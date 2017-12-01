@@ -1,6 +1,8 @@
 require 'yaml'
 
 require "landscapist/renderer/swagger/schema"
+require "landscapist/renderer/swagger/payload"
+require "landscapist/renderer/swagger/endpoint"
 
 module Landscapist
   class Renderer
@@ -15,12 +17,22 @@ module Landscapist
       
       
       class Yard < Renderer
+        
+        attr_accessor :definition_data
+        def initialize(target)
+          super(self, target)
+          @definition_data = {}
+        end
       
         def to_s
           YAML.dump(_deep_stringify_keys_in_object(swagger))
         end
       
         def swagger
+          process_references(swagger_with_unprocessed_references)
+        end
+        
+        def swagger_with_unprocessed_references
           {
             swagger: '2.0',
             info: {
@@ -28,15 +40,41 @@ module Landscapist
               description: '',
               version:     '1.0',
             },
-            host: '',
+            host: 'example.com',
             schemes: ['https'],
-            basePath: '',
+            basePath: '/',
             produces: ['application/json'],
             paths: paths,
-            parameters: parameters,
-            definitions: definitions,
+            # parameters: parameters,
           }
         end
+        
+        def process_references(structure)
+          reference_containers = _find_references(structure)
+          references = reference_containers.group_by {|substructure| substructure[:'$ref'] }
+          references.each do |reference, containers|
+            definition_name = reference.full_name.gsub('::', '')
+            root.definition_data[definition_name] ||= Landscapist::Renderer::Swagger::Payload.new(root, reference).swagger
+            containers.each do |substructure|
+              substructure[:'$ref'] = "#/definitions/#{definition_name}"
+            end
+          end
+          structure[:definitions] = definitions if root.definition_data.size > 0
+          structure
+        end
+        
+        def _find_references(structure)
+          case structure
+          when Array
+            structure.flat_map {|substructure| _find_references(substructure) }
+          when Hash
+            return [structure] if structure[:'$ref']
+            structure.each_value.flat_map {|substructure| _find_references(substructure) }
+          else
+            []
+          end
+        end
+        
         
         def _deep_stringify_keys_in_object(object)
          case object
@@ -52,25 +90,11 @@ module Landscapist
        end
         
         def paths
-          all_endpoints = descendant_endpoints#endpoints + yards.flat_map{|y| Landscapist::Renderer::Swagger::Yard.new(y).paths }
-          STDERR.puts all_endpoints.inspect
-          all_endpoints.each_with_object({}) do |endpoint, h|
-            path = endpoint.expanded_path + '#' + endpoint.full_name.gsub(/[^a-z]/i, '')
+          descendant_endpoints.each_with_object({}) do |endpoint, h|
+            endpoint_renderer = Landscapist::Renderer::Swagger::Endpoint.new(root, endpoint)
+            path = endpoint_renderer.path
             h[path] ||= {}
-            h[path][endpoint.http_method.to_s.downcase] = {
-              summary: nil,
-              description: nil,
-              parameters: endpoint.expects && Landscapist::Renderer::Swagger::Schema.new(endpoint.expect_type, endpoint.expects).swagger,
-              responses: endpoint.returns.sort.each_with_object({}) do |(status, returns), hh|
-                hh[status] = {
-                  description: Rack::Utils::HTTP_STATUS_CODES[status],
-                  schema: Landscapist::Renderer::Swagger::Schema.new(endpoint.return_type[status], returns).swagger,
-                  # examples: {
-                  #   'content_type': {}
-                  # },
-                }
-              end,
-            }.compact
+            h[path][endpoint.http_method.to_s.downcase] = endpoint_renderer.swagger
           end
         end
       
@@ -79,7 +103,9 @@ module Landscapist
         end
       
         def definitions
-          []
+          definition_data.sort.each_with_object({}) {|(name, definition), h|
+            h[name] = definition
+          }
         end
       
       
