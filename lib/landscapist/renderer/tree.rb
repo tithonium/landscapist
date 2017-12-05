@@ -2,6 +2,10 @@ module Landscapist
   class Renderer
     class Tree < Renderer
       
+      def initialize(target)
+        super(self, target)
+      end
+      
       def to_s
         tree
       end

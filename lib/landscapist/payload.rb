@@ -56,6 +56,10 @@ module Landscapist
         __getobj__.merge_other_payloads(others)
       end
       
+      def merge(*others)
+        __getobj__.merge_other_payloads(others)
+      end
+      
       def method_missing(m, *args)
         __getobj__.add_content(m, *args)
       end

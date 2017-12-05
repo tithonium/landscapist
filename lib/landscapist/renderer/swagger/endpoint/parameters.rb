@@ -52,7 +52,7 @@ module Landscapist
                 }
                 schema = Landscapist::Renderer::Swagger::Schema.new(root, nil, spec)
                 case spec
-                when ::Landscapist::Payload, ::Landscapist::Type
+                when Array, ::Landscapist::Payload, ::Landscapist::Type
                   definition.merge schema.properties
                 else
                   definition.merge schema.properties[:schema]

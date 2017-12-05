@@ -50,16 +50,21 @@ module Landscapist
         end
         
         def process_references(structure)
+          _process_references(structure)
+          structure[:definitions] = definitions if root.definition_data.size > 0
+          structure
+        end
+        
+        def _process_references(structure)
           reference_containers = _find_references(structure)
           references = reference_containers.group_by {|substructure| substructure[:'$ref'] }
           references.each do |reference, containers|
             definition_name = reference.full_name.gsub('::', '')
-            root.definition_data[definition_name] ||= Landscapist::Renderer::Swagger::Payload.new(root, reference).swagger
+            root.definition_data[definition_name] ||= _process_references(Landscapist::Renderer::Swagger::Payload.new(root, reference).swagger)
             containers.each do |substructure|
               substructure[:'$ref'] = "#/definitions/#{definition_name}"
             end
           end
-          structure[:definitions] = definitions if root.definition_data.size > 0
           structure
         end
         
