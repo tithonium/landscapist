@@ -11,7 +11,6 @@ require "landscapist/type"
   url:      {type: 'string', format: 'url'},
   boolean:  {},
   enum:     {type: 'string'},
-  tzname:   {type: 'string', format: 'iana-timezone'},
 }.each do |core_type, swagger_overrides|
   Landscapist::Type.define_core_type(core_type, swagger_overrides)
 end

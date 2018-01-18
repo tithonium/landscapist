@@ -2,12 +2,22 @@ module Landscapist
   class Type < Definition
     
     attr_writer :param
+    attr_accessor :base_type, :format
+    def initialize(*)
+      super
+      @base_type ||= 'string'
+    end
+    
     def to_param
       @param || self.name.gsub(/([a-z])([A-Z])/){$1+'_'+$2.downcase}.downcase
     end
     
     def inspect
-      "<#T:#{name}>"
+      [
+        "<#T:#{name}:#{base_type}",
+        (format ? " format:'#{format}'" : nil),
+        ">",
+      ].compact.join
     end
     
     class CoreType < Type
@@ -35,6 +45,12 @@ module Landscapist
     end
     
     class DSL < Landscapist::Definition::DSL
+      def base_type(v)
+        __getobj__.base_type = v.to_s
+      end
+      def format(v)
+        __getobj__.format = v.to_s
+      end
     end
   end
 end

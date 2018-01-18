@@ -1,11 +1,13 @@
 module Landscapist
   class Payload < Definition
     
-    attr_reader :contents, :content_metadata
+    attr_reader :contents, :content_metadata, :has_own_content, :union_members
     def initialize(*)
       super
       @contents = {}
       @content_metadata = {}
+      @has_own_content = false
+      @union_members = []
     end
     
     def add_content(name, type, details = nil)
@@ -20,6 +22,7 @@ module Landscapist
       details = {}
       others.each do |other|
         other = _resolve_spec(other) unless other.is_a?(Definition)
+        @union_members << other
         other.contents.each do |name, spec|
           unless spec.is_a?(Definition)
             constants[name] << spec
@@ -50,6 +53,10 @@ module Landscapist
       "<#P:#{name} #{contents.map{|k,v| "#{k}:#{v.inspect}"}.join(', ')}>"
     end
     
+    def union?
+      !has_own_content && union_members.length > 0
+    end
+    
     class DSL < Landscapist::Definition::DSL
       
       def union(*others)
@@ -61,6 +68,7 @@ module Landscapist
       end
       
       def method_missing(m, *args)
+        __getobj__.instance_variable_set(:@has_own_content, true)
         __getobj__.add_content(m, *args)
       end
     end

@@ -18,6 +18,12 @@ class LandscapistCLI < Thor
     puts Landscapist.yard.swagger
   end
   
+  desc 'typescript FILE', "Print the API typescript definitions"
+  def typescript(file)
+    load(file)
+    puts Landscapist.yard.typescript
+  end
+  
   desc 'server FILE', "Start web server"
   method_option :port, type: :numeric, default: 9292, aliases: '-p', desc: 'http listen port'
   def server(file)
@@ -29,5 +35,3 @@ class LandscapistCLI < Thor
 end
 
 LandscapistCLI.start
-
-

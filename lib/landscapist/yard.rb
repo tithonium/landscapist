@@ -86,7 +86,11 @@ module Landscapist
     def swagger
       Landscapist::Renderer::Swagger.new(self).to_s
     end
-  
+
+    def typescript
+      Landscapist::Renderer::Typescript.new(self).to_s
+    end
+
     class DSL < Landscapist::Definition::DSL
     
       def path(url_fragment)

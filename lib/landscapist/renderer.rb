@@ -1,5 +1,6 @@
 require "landscapist/renderer/tree"
 require "landscapist/renderer/swagger"
+require "landscapist/renderer/typescript"
 
 module Landscapist
   class Renderer
