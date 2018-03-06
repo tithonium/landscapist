@@ -43,8 +43,10 @@ module Landscapist
             spec.map(&:name).join(' | ')
           elsif spec == Landscapist::Type::CoreType.enum
             target.content_metadata[key].map {|s| _translate_spec(key, s) }.join(' | ')
-          # elsif spec == Landscapist::Type::CoreType.boolean
-          #   'null | true | false'
+          elsif spec == Landscapist::Type::CoreType.boolean
+           'nullableBoolean'
+          elsif spec == Landscapist::Type::CoreType.integer
+           'number'
           elsif spec.is_a?(Landscapist::Type::CoreType)
             spec.swagger_overrides&.[](:type) || spec.name
           elsif spec.is_a?(Landscapist::Definition)

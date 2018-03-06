@@ -1,5 +1,6 @@
 require "landscapist/renderer/typescript/type"
 require "landscapist/renderer/typescript/payload"
+require "active_support/inflector"
 
 module Landscapist
   class Renderer
@@ -28,9 +29,14 @@ module Landscapist
       
         def to_a
           content = []
-          content += ['type boolean = null | true | false', ''] if @depth == 0
+          content += ['type nullableBoolean = boolean | null', ''] if @depth == 0
           unless target.name.empty?
-            content << "#{_indent}namespace #{target.name} {"
+            line = [
+              _indent,
+              @depth == 1 ? 'declare ' : nil,
+              "namespace #{ActiveSupport::Inflector.underscore(target.name)} {",
+            ].compact.join
+            content << line
             content << '' if (target.types.length + target.payloads.length) >  0
             @indent += 1
           end
