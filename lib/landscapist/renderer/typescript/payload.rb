@@ -24,7 +24,7 @@ module Landscapist
             content << "#{_indent}interface #{target.name} {"
             @indent += 1
             target.contents.each do |key, spec|
-              content << "#{_indent}#{key}: #{_translate_spec(key, spec)}"
+              content << "#{_indent}#{key.to_s.sub(/\?\Z/,'')}: #{_translate_spec(key, spec)}"
             end
             @indent -= 1
             content << "#{_indent}}"
