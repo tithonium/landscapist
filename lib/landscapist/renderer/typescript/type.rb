@@ -15,9 +15,15 @@ module Landscapist
         end
 
         def to_a
-          [
-            "#{_indent}type #{target.name} = #{target.base_type}#{" // format: /#{target.format}/" if target.format}",
-          ]
+          if target.base_type == :enum
+            [
+              "#{_indent}type #{target.name} = #{target.values.map{|spec| "'#{spec}'" }.join(' | ')}",
+            ]
+          else
+            [
+              "#{_indent}type #{target.name} = #{target.base_type}#{" // format: /#{target.format}/" if target.format}",
+            ]
+          end
         end
         
         def _indent

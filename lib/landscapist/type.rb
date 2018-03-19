@@ -2,7 +2,7 @@ module Landscapist
   class Type < Definition
     
     attr_writer :param
-    attr_accessor :base_type, :format
+    attr_accessor :base_type, :format, :values
     def initialize(*)
       super
       @base_type ||= 'string'
@@ -50,6 +50,10 @@ module Landscapist
       end
       def format(v)
         __getobj__.format = v.to_s
+      end
+      def enum(values)
+        __getobj__.base_type = :enum
+        __getobj__.values = Array(values).map(&:to_s)
       end
     end
   end
