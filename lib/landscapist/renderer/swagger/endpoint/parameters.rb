@@ -24,9 +24,9 @@ module Landscapist
                 schema = case spec
                 when Landscapist::Payload
                   {
-                    name:     key.to_s,
+                    name:     key.to_s.sub(/\?\Z/, ''),
                     in:       location,
-                    required: true,
+                    required: !key.to_s.end_with?('?'),
                     type:     'object',
                     schema:   {
                       '$ref': spec,
@@ -34,9 +34,9 @@ module Landscapist
                   }
                 else
                   {
-                    name:     key.to_s,
+                    name:     key.to_s.sub(/\?\Z/, ''),
                     in:       location,
-                    required: true,
+                    required: !key.to_s.end_with?('?'),
                     type:     'string',
                   }.merge(Landscapist::Renderer::Swagger::Schema.new(root, nil, spec).properties)
                 end
@@ -46,26 +46,18 @@ module Landscapist
                 details = target.content_metadata[name]
                 field_name = name.to_s.sub(/\?\Z/,'')
                 definition = {
-                  name:     name.to_s,
+                  name:     field_name,
                   in:       location,
-                  required: true,
                 }
                 schema = Landscapist::Renderer::Swagger::Schema.new(root, nil, spec)
                 case spec
                 when Array, ::Landscapist::Payload, ::Landscapist::Type
-                  definition.merge schema.properties
+                  definition.merge! schema.properties
                 else
-                  definition.merge schema.properties[:schema]
+                  definition.merge! schema.properties[:schema]
                 end
-                
-                # [{
-                #   name: ActiveSupport::Inflector.underscore(target.name),
-                #   in:   location,
-                #   required: true,
-                #   schema: {
-                #     '$ref': target
-                #   },
-                # }]
+                definition[:required] = !name.to_s.end_with?('?')
+                definition
               end
             end
           end

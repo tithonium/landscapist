@@ -17,10 +17,11 @@ module Landscapist
       class Yard < Renderer
         
         attr_accessor :indent
-        def initialize(target, depth = 0, indent = 0)
+        def initialize(target, depth = 0, indent = 0, declared = false)
           super(self, target)
           @depth = depth
           @indent = indent
+          @declared = declared
         end
       
         def to_s
@@ -29,17 +30,18 @@ module Landscapist
       
         def to_a
           content = []
-          content += ['type nullableBoolean = boolean | null', ''] if @depth == 0
           unless target.name.empty?
             line = [
               _indent,
-              @depth == 1 ? 'declare ' : nil,
+              @declared ? nil : 'declare ',
               "namespace #{ActiveSupport::Inflector.underscore(target.name)} {",
             ].compact.join
             content << line
             content << '' if (target.types.length + target.payloads.length) >  0
             @indent += 1
+            @declared = true
           end
+          content += ["#{_indent}type nullableBoolean = boolean | null", ''] if @depth == 0
           target.types.each do |type|
             result = Landscapist::Renderer::Typescript::Type.new(type, @depth + 1, indent).to_a
             content = content + result + [''] if result.length > 0
@@ -49,7 +51,7 @@ module Landscapist
             content = content + result + [''] if result.length > 0
           end
           target.yards.each do |yard|
-            result = Landscapist::Renderer::Typescript::Yard.new(yard, @depth + 1, indent).to_a
+            result = Landscapist::Renderer::Typescript::Yard.new(yard, @depth + 1, indent, @declared).to_a
             content = content + result + [''] if result.length > 0
           end
           unless target.name.empty?

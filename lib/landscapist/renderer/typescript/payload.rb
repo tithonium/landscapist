@@ -23,8 +23,10 @@ module Landscapist
             content = []
             content << "#{_indent}interface #{target.name} {"
             @indent += 1
+            keylen = target.contents.keys.map(&:to_s).map(&:length).max
             target.contents.each do |key, spec|
-              content << "#{_indent}#{key.to_s.sub(/\?\Z/,'')}: #{_translate_spec(key, spec)}"
+              clean_key = key.to_s.sub(/\?\Z/,'')
+              content << "%s%s:%s %s" % [_indent, clean_key, " " * (keylen - clean_key.length), _translate_spec(key, spec)]
             end
             @indent -= 1
             content << "#{_indent}}"

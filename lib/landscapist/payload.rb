@@ -17,24 +17,30 @@ module Landscapist
     end
     
     def merge_other_payloads(others)
-      key_counts = Hash.new{|h,k|h[k] = 0}
-      constants = Hash.new{|h,k|h[k] = []}
-      details = {}
       others.each do |other|
         other = _resolve_spec(other) unless other.is_a?(Definition)
         @union_members << other
+      end
+      key_counts = Hash.new{|h,k|h[k] = 0}
+      constants = Hash.new{|h,k|h[k] = []}
+      optionals = {}
+      details = {}
+      union_members.each do |other|
         other.contents.each do |name, spec|
+          optional = name.to_s.end_with?('?')
+          name = name.to_s.sub(/\?\Z/, '').to_sym
           unless spec.is_a?(Definition)
             constants[name] << spec
             spec = :CONSTANT
           end
           key_counts[[name, spec]] += 1
+          optionals[name] = optional
           details[name] = other.content_metadata[name] if other.content_metadata[name]
         end
       end
       key_counts.each do |(name, spec), count|
         corrected_name = name
-        corrected_name = "#{name}?".to_sym unless count == others.count
+        corrected_name = "#{name}?".to_sym if count != union_members.count || optionals[name]
         if constants[name].size > 0
           add_content(corrected_name, :enum, constants[name])
         else

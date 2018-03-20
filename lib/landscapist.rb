@@ -20,18 +20,18 @@ module Landscapist
       @yard = nil
     end
   
-    def landscape(&block)
-      Landscapist::Yard::DSL.new(yard).instance_eval(&block)
+    def landscape(name = nil, &block)
+      Landscapist::Yard::DSL.new(yard(name)).instance_eval(&block)
     end
   
-    def yard
-      @yard ||= Landscapist::Yard.new(nil).tap{|y| y.set_path('/') }
+    def yard(name = nil)
+      @yard ||= Landscapist::Yard.new(name).tap{|y| y.set_path('/') }
     end
   end
 end
 
 module Kernel
-  def landscape(&block)
-    Landscapist.landscape(&block)
+  def landscape(name = nil, &block)
+    Landscapist.landscape(name, &block)
   end
 end
