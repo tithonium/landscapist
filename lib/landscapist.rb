@@ -1,5 +1,6 @@
 require 'delegate'
 require 'rack'
+require 'pathname'
 
 require "landscapist/version"
 require "landscapist/exceptions"
@@ -19,19 +20,23 @@ module Landscapist
     def clear
       @yard = nil
     end
-  
+
     def landscape(name = nil, &block)
-      Landscapist::Yard::DSL.new(yard(name)).instance_eval(&block)
+      Landscapist::Yard::DSL.new(yard(name)).tap{|y| y.instance_eval(&block) }
     end
-  
+
     def yard(name = nil)
-      @yard ||= Landscapist::Yard.new(name).tap{|y| y.set_path('/') }
+      (@yards ||= {})[name] ||= Landscapist::Yard.new(name).tap{|y| y.set_path('/') }
+    end
+
+    def parse(filename)
+      landscape(filename) { include(filename) }
     end
   end
 end
 
-module Kernel
-  def landscape(name = nil, &block)
-    Landscapist.landscape(name, &block)
-  end
-end
+# module Kernel
+#   def landscape(name = nil, &block)
+#     Landscapist.landscape(name, &block)
+#   end
+# end

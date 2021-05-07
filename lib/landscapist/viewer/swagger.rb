@@ -9,7 +9,7 @@ module Landscapist
         @base = Pathname.new(__dir__.sub(%r{/lib.*},''))
         @file = file
       end
-      
+
       def call(env)
 
         case env['PATH_INFO']
@@ -20,8 +20,7 @@ module Landscapist
           ['200', {'Content-Type' => 'text/css'}, [@templates['viewer.css']]]
         when '/swagger.yml'
           # Landscapist.clear
-          load(@file)
-          ['200', {'Content-Type' => "text/yaml", 'Access-Control-Allow-Origin' => '*'}, [Landscapist.yard.swagger]]
+          ['200', {'Content-Type' => "text/yaml", 'Access-Control-Allow-Origin' => '*'}, [Landscapist.parse(@file).swagger]]
         else
           filepath = Pathname.new(@base + env['PATH_INFO'][1..-1])
           if filepath.exist?

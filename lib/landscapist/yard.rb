@@ -1,6 +1,6 @@
 module Landscapist
   class Yard < Definition
-    
+
     attr_reader :path, :version
     def initialize(*)
       super
@@ -13,46 +13,46 @@ module Landscapist
         yards:     {},
       }
     end
-    
+
     def set_path(path)
       @path = path
     end
-    
+
     def set_version(version)
       @version = version
     end
-    
+
     %w[yard endpoint payload type].each do |child|
       class_eval <<-"EOF", __FILE__, __LINE__
         def find_own_#{child}(name)
           @children[:#{child}s][name.to_s]
         end
-        
+
         def find_#{child}(name)
           @children[:#{child}s][name.to_s] || parental_delegator.find_own_#{child}(name)
         end
-        
+
         def get_#{child}(name)
           if found = find_#{child}(name)
             return found
           end
           @children[:#{child}s][name.to_s] ||= #{child.sub(/\A([a-z])/){$1.upcase}}.new(name.to_s, self)
         end
-        
+
         def new_#{child}(name)
           @children[:#{child}s][name.to_s] = #{child.sub(/\A([a-z])/){$1.upcase}}.new(name.to_s, self)
         end
-        
+
         def #{child}s
           @children[:#{child}s].values
         end
       EOF
     end
-    
+
     def descendant_endpoints
       endpoints + yards.flat_map(&:descendant_endpoints)
     end
-    
+
     def import_yard(other_yard)
       other_yard = parental_delegator.find_yard(other_yard) unless other_yard.is_a?(Yard)
       other_yards = other_yard.yards
@@ -71,7 +71,7 @@ module Landscapist
       @children[:types].merge!(other_yard.instance_variable_get(:@children)[:types])
       @children[:payloads].merge!(other_yard.instance_variable_get(:@children)[:payloads])
     end
-    
+
     def inspect
       "<#Y:#{name}" +
       (endpoints.empty? ? '' : " endpoints: #{endpoints.inspect}") +
@@ -92,35 +92,51 @@ module Landscapist
     end
 
     class DSL < Landscapist::Definition::DSL
-    
+
+      def include(filename)
+        filename += '.yard' unless filename.end_with?('.yard')
+        @_path_stack ||= []
+        path = Pathname.new(File.expand_path(filename, @_path_stack.last&.dirname))
+        data = path.read
+        @_path_stack.push(path)
+        begin
+          eval(data)
+        rescue => ex
+          STDERR.puts "%s-> %s" % ["  " * (@_path_stack.length - 1), @_path_stack.last]
+          raise
+        ensure
+          @_path_stack.pop
+        end
+      end
+
       def path(url_fragment)
         set_path url_fragment
       end
-    
+
       def version(v)
         set_version v
       end
-      
+
       def namespace(name, &block)
         Landscapist::Yard::DSL.new(get_yard(name)).instance_eval(&block)
       end
-      
+
       def extends(other_yard)
         import_yard(other_yard)
       end
-    
+
       def endpoint(name, &block)
         Landscapist::Endpoint::DSL.new(new_endpoint(name)).instance_eval(&block)
       end
-    
+
       def payload(name, &block)
         Landscapist::Payload::DSL.new(new_payload(name)).instance_eval(&block)
       end
-    
+
       def type(name, &block)
         Landscapist::Type::DSL.new(new_type(name)).instance_eval(&block)
       end
     end
-    
+
   end
 end

@@ -1,36 +1,36 @@
 module Landscapist
   class Renderer
     class Tree < Renderer
-      
+
       def initialize(target)
         super(self, target)
       end
-      
+
       def to_s
         tree
       end
-      
+
       def tree(depth = 0)
-      
+
         out = []
         out << "#{name}:" unless depth == 0
-      
+
         if (payloads.count > 0 || types.count > 0) && depth == 0
           out << 'Global:'
         end
-      
+
         if payloads.count > 0
           out << "  - Payloads: #{payloads.map(&:name).join(", ")}"
         end
-      
+
         if types.count > 0
           out << "  - Types: #{types.map(&:name).join(", ")}"
         end
-      
+
         if payloads.count > 0 || types.count > 0
           out << ''
         end
-        
+
         if endpoints.count > 0
           endpoints.each do |ep|
             out << "  * #{ep.name}: #{ep.http_method.to_s.upcase} #{ep.expanded_path}"
@@ -74,19 +74,19 @@ module Landscapist
           end
           out << ''
         end
-      
+
         if yards.count > 0
           yards.each do |y|
             out += Landscapist::Renderer::Tree.new(y).tree(depth + 1)
           end
           out << ''
         end
-      
+
         out.map!{|l| l.gsub(/^/, '  ') } if depth > 1
         return out.join("\n").gsub(/ *\n *\n(?: *\n)+/, "\n\n") if depth == 0
         out
       end
-  
+
     end
   end
 end

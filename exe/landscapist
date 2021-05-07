@@ -3,27 +3,23 @@
 require 'landscapist'
 require 'thor'
 
-
 class LandscapistCLI < Thor
-  
+
   desc 'print FILE', "Print the API tree"
   def print(file)
-    load(file)
-    puts Landscapist.yard.tree
+    puts Landscapist.parse(file).tree
   end
-  
+
   desc 'swagger FILE', "Print the API swagger definition"
   def swagger(file)
-    load(file)
-    puts Landscapist.yard.swagger
+    puts Landscapist.parse(file).swagger
   end
-  
+
   desc 'typescript FILE', "Print the API typescript definitions"
   def typescript(file)
-    load(file)
-    puts Landscapist.yard.typescript
+    puts Landscapist.parse(file).typescript
   end
-  
+
   desc 'server FILE', "Start web server"
   method_option :port, type: :numeric, default: 9292, aliases: '-p', desc: 'http listen port'
   def server(file)
@@ -31,7 +27,7 @@ class LandscapistCLI < Thor
     system(%Q[(sleep 1 ; open http://localhost:#{options[:port]}/) &]) if RUBY_PLATFORM =~ /darwin/i
     Rack::Server.start( app: Rack::ShowExceptions.new(Landscapist::Viewer::Swagger.new(file)), Port: options[:port] )
   end
-  
+
 end
 
 LandscapistCLI.start

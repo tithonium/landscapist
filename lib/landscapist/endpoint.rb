@@ -1,6 +1,6 @@
 module Landscapist
   class Endpoint < Definition
-    
+
     def self.status_name(status)
       if status.is_a?(Integer)
         "#{status} #{Rack::Utils::HTTP_STATUS_CODES[status]}"
@@ -8,8 +8,8 @@ module Landscapist
         status.to_sym
       end
     end
-      
-    
+
+
     attr_reader :path, :http_method, :expects, :expect_type, :returns, :return_type
     def initialize(*)
       super
@@ -20,20 +20,20 @@ module Landscapist
       @returns = {}
       @return_type = {}
     end
-    
+
     def set_path(path)
       @path = path
     end
-    
+
     def set_http_method(http_method)
       @http_method = http_method
     end
 
     def add_expect(spec, options = {})
-      
+
       Landscapist::Endpoint::Expectation.new(spec, options[:optional])
-      
-      
+
+
       value = update_structures(@expects, spec, options)
       @expects = value
       @expect_type = value.is_a?(Hash) ? :hash : (value.is_a?(Array) && value.length == 1 ? :array : :payload)
@@ -63,7 +63,7 @@ module Landscapist
           return nil if @expect_type.nil?
           @expect_type == :#{type} ? true : false
         end
-        
+
         def returns_#{type}?(status = 200)
           return nil if @return_type[status].nil?
           @return_type[status] == :#{type} ? true : false
@@ -94,34 +94,34 @@ module Landscapist
       end
       value
     end
-    
+
     def inspect
       "<#E:#{name}(#{http_method.to_s.upcase}) #{path.inspect}" +
       (expects ? " expects: #{expects.inspect}" : '') +
       (returns ? " returns: #{returns.inspect}" : '') +
       ">"
     end
-    
+
     class DSL < Landscapist::Definition::DSL
-      
+
       def path(*a)
         set_path a.first
       end
-      
+
       def expects(*a)
         add_expect *a
       end
-      
+
       def returns(*a)
         add_return *a
       end
-      
+
       def method(*a)
         set_http_method *a
       end
-      
+
     end
-    
+
   end
 end
 
